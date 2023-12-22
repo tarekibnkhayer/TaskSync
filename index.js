@@ -1,18 +1,22 @@
 const express = require('express')
 const app = express()
-const port = 3000 | process.env.PORT;
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const port =  process.env.PORT | 2626;
 require('dotenv').config()
 const cors = require('cors');
+var cookieParser = require('cookie-parser')
 
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: ['http://localhost:5173', 'https://task-mangement-4530f.web.app/'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true
 }));
-app.use(express.json()); 
+app.use(express.json());
+app.use(cookieParser()) ;
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+
 const uri = process.env.DB_URI;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -29,6 +33,14 @@ async function run() {
     app.post('/tasks', async(req, res) => {
       const task = req.body;
       const result = await taskCollection.insertOne(task);
+      res.send(result);
+    });
+
+    app.get("/tasks", async(req, res) => {
+      const email = req.query.email;
+      const query = {email: email}
+      const cursor = taskCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
     })
   } finally {
